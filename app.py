@@ -6,6 +6,7 @@ import remove
 import app_mass
 import app_mix
 import extended_entry
+import verif
 # Vos fonctions de génération de fichiers de sortie et d'analyse doivent être importées ici.
 
 class SoftsusyApp:
@@ -18,6 +19,8 @@ class SoftsusyApp:
         self.label_font = ('Arial', 8)
         self.fenetre()
         self.parameters = {}
+        self.param_enlever = []
+        self.entry_name = ''
         self.param_mass = {}
         self.label_param = 1
         self.stock_param = {}
@@ -102,6 +105,7 @@ class SoftsusyApp:
         entry_step = extended_entry.EntryWithPlaceholder(self.root, placeholder = 'step')
         entry_step.grid(row = index, column = 3, padx=5, pady=5, sticky = "ew")
 
+
         submit_button = tk.Button(self.root, text = "Submit",bg = '#0F9DE8', fg = 'white', relief = 'raised', command = lambda: self.submit_data(index, entry_min, entry_max, entry_step, self.entry_name))
         submit_button.grid(row = index, column = 4, padx=5, pady=5, sticky = "ew")
 
@@ -129,17 +133,22 @@ class SoftsusyApp:
         
         
     def fix_parameters(self, mass, value):
-        val = int(value.get())
-        m = str(mass.get())
+        try:
+            val = int(value.get())
+            m = str(mass.get())
+        except ValueError:
+            messagebox.showerror("Error", "Pas une bonne valeur")
+
         next_row = max([widget.grid_info()['row'] for widget in self.fix_parameters_widgets], default = 0)+1
 
         label_texte = tk.Label(self.root, text = m+f" : {val}", bg = "#f0f0f0")
         
         if m not in self.param_mass:
+    
             self.stock_param[m] = self.label_param
             remove_button = tk.Button(self.root, text = "remove", fg = 'white',bg = '#850606', relief = 'raised', command = lambda: self.remove_param(m))
             label_texte.grid(row = 5+self.stock_param[m], column = 2, padx=5, pady=5, sticky = "ew")
-            
+            self.param_enlever.append(5+self.stock_param[m])
             remove_button.grid(row = 5+self.stock_param[m], column = 3, padx=5, pady=5, sticky = "ew")
             self.fix_parameters_widgets.append(remove_button)
             self.label_param+=1
@@ -156,6 +165,12 @@ class SoftsusyApp:
         param_step = int(entry_step.get())
         param_name = entry_name
 
+        ok, name_ok = verif.verification_input(entry_name, [param_min, param_max, param_step])
+
+        if ok:
+            messagebox.showerror("Error", name_ok)
+            return
+
         self.parameters[param_name] = (param_min, param_max, param_step)
         # if index == 0:
         #     self.parameters["M1(MX)"] = (param_min, param_max, param_step)
@@ -169,6 +184,8 @@ class SoftsusyApp:
 
         label = tk.Label(self.root, text=res, font = ('Arial', 10), bg = "#f0f0f0")
         label.grid(row=1, column = 1, padx=5, pady=5, sticky = "ew", columnspan = 2)
+        self.param_enlever.append(1)
+        self.fix_parameters_widgets.append(label)
         print(self.parameters)
 
 
@@ -199,13 +216,21 @@ class SoftsusyApp:
             self.param_mass.pop(m)
         except KeyError:
             print("not here ")
-        widget_to_destroy = [widget for widget in self.fix_parameters_widgets if widget.grid_info()['row'] == 10+self.stock_param[m]]
+        widget_to_destroy = [widget for widget in self.fix_parameters_widgets if widget.grid_info()['row'] == 5+self.stock_param[m]]
         for widget in widget_to_destroy:
             widget.destroy()
             self.fix_parameters_widgets.remove(widget)
+        self.label_param = 0
     def restart(self):
         self.parameters.clear()
         self.param_mass.clear()
+
+        for i in self.param_enlever:
+            widget_to_destroy = [widget for widget in self.fix_parameters_widgets if widget.grid_info()['row'] == i]
+            for widget in widget_to_destroy:
+                widget.destroy()
+                self.fix_parameters_widgets.remove(widget)
+
         
     def debug(self):
         self.parameters['M_2(MX)'] = (100,1500,100)
