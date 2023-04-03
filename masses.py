@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import itertools
 import concurrent.futures
 import are_files
+import numpy as np
+from scipy.interpolate import griddata
+
 particle_names = {
     1: "d",
     2: "u",
@@ -254,11 +257,12 @@ def plot_mass(liste_mass, liste_input, param_mass, param_ranges, neutralino, fig
         y_m2_3.append(math.fabs(neutralino_3[i]))
         y_m2_4.append(math.fabs(neutralino_4[i]))
 
-
-    if neutralino == 'N1':
-        plot_N1(x_m1,y_m2_1, fig, ax, param_ranges, param_mass, neutralino)
-    if neutralino == 'N2':
-        plot_N1(x_m2,y_m2_2, fig, ax, param_ranges, param_mass, neutralino) 
+    if neutralino == 'M1':
+        plot_M1(x_m1,y_m2_1,y_m2_2, fig, ax, param_ranges, param_mass, neutralino)
+    if neutralino == 'M2':
+        plot_M2(x_m2,y_m2_1,y_m2_2, fig, ax, param_ranges, param_mass, neutralino)
+    if neutralino == 'map':
+        plots(x_m1, x_m2, y_m2_1, y_m2_2, fig, ax, param_ranges, param_mass) 
     # #plt.plot(x_mu,y_mu_2, label = "mu(MX)")
     # plt.legend()
 
@@ -268,32 +272,56 @@ def plot_mass(liste_mass, liste_input, param_mass, param_ranges, neutralino, fig
     # plt.savefig("neutralino_2")
     # plt.show()
 
-def plot_N1(x_m1,y_m2_1, fig, ax, param_ranges, param_mass, neutralino):
+def plot_M1(x_m1,y_m2_1,y_m2_2, fig, ax, param_ranges, param_mass, neutralino):
 
-    xy_sorted = sorted(zip(x_m1,y_m2_1))
-    x_m1, y_m2_1 = zip(*xy_sorted)
+    xy_sorted = sorted(zip(x_m1,y_m2_1, y_m2_2), key = lambda triplet: triplet[0])
+    x_m1, y_m2_1, y_m2_2 = zip(*xy_sorted)
     x_m1 = list(x_m1)
     y_m2_1 = list(y_m2_1)
-    ax.plot(x_m1,y_m2_1, label = str(list(param_ranges.keys())))
+    y_m2_2 = list(y_m2_2)
+    ax.plot(x_m1,y_m2_1, label = "Variation du neutralino_1 en fonction de M_1(MX)")
+    ax.plot(x_m1,y_m2_2, label = "Variation du neutralino_2 en fonction de M_1(MX)")
     #plt.plot(x_mu,y_mu_2, label = "mu(MX)")
     plt.legend()
 
-    ax.set_ylabel("Masses du neutralino "+ neutralino +" en GeV")
+    ax.set_ylabel("Masses du neutralino en GeV")
     ax.set_xlabel("Masse " + str(list(param_ranges.keys())) +" en GeV")
     #print(liste_input)
     plt.savefig("neutralino_"+neutralino)
 
-def plot_N2(x_m1,y_m2_1, fig, ax):
-    ax.plot(x_m1,y_m2_1, label = "M_1(MX)")
+def plot_M2(x_m1,y_m2_1,y_m2_2, fig, ax, param_ranges, param_mass, neutralino):
+    xy_sorted = sorted(zip(x_m1,y_m2_1, y_m2_2), key = lambda triplet: triplet[0])
+    x_m1, y_m2_1, y_m2_2 = zip(*xy_sorted)
+    x_m1 = list(x_m1)
+    y_m2_1 = list(y_m2_1)
+    y_m2_2 = list(y_m2_2)
+    ax.plot(x_m1,y_m2_1, label = "Variation du neutralino_1 en fonction de M_2(MX)")
+    ax.plot(x_m1,y_m2_2, label = "Variation du neutralino_2 en fonction de M_2(MX)")
     #plt.plot(x_mu,y_mu_2, label = "mu(MX)")
     plt.legend()
 
-    ax.set_ylabel("Masses du neutralino 2 en GeV")
-    ax.set_xlabel("Masse M_2(MX) en GeV")
+    ax.set_ylabel("Masses du neutralino en GeV")
+    ax.set_xlabel("Masse " + str(list(param_ranges.keys())) +" en GeV")
     #print(liste_input)
-    plt.savefig("neutralino_2")
+    plt.savefig("neutralino_"+neutralino)
 
 
+def plots(x_m1,x_m2,y_m2_1,y_m2_2, fig, ax, param_ranges, param_mass):
+    x_m1 = list(x_m1)
+    x_m2 = list(x_m2)
+    y_m2_1 = list(y_m2_1)
+    y_m2_2 = list(y_m2_2)
+    
+    scatter = ax.scatter(x_m1, x_m2, c = y_m2_1, cmap = 'viridis')
+
+    cbar = fig.colorbar(scatter, ax=ax, label = 'y_m2_1')
+    x_m1_grid, x_m2_grid = np.meshgrid(np.linspace(min(x_m1), max(x_m1), 100), np.linspace(min(x_m2), max(x_m2), 100))
+    points = np.vstack((x_m1, x_m2)).T
+    y_m2_1_grid = griddata(points, y_m2_1, (x_m1_grid, x_m2_grid), method = 'cubic')
+    ax.contour(x_m1_grid, x_m2_grid, y_m2_1_grid, cmap = 'viridis', alpha = 0.5)
+
+    ax.set_xlabel('x_m1')
+    ax.set_ylabel('x_m2')
 
 # def perform_calculations_mass(combi):
 
