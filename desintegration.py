@@ -216,7 +216,7 @@ def plot_branching_ratios(neutralino_df, chargino_df, nmix, umix):
         ax.set_title(title)
         ax.legend()
 
-    plt.show()
+    #plt.show()
      
 
 
@@ -232,13 +232,15 @@ def plot_branching_ratios(neutralino_df, chargino_df, nmix, umix):
 
 def plot_branching_ratios_on_ax(ax_neutralino, ax_chargino, neutralino_df, chargino_df, title_neutralino, title_chargino):
     # Neutralinos
+
     decay_products_neutralino = neutralino_df['decay_products'].unique()
+ 
     num_decay_products_neutralino = len(decay_products_neutralino)
     bar_positions_neutralino = np.arange(num_decay_products_neutralino)
-
+    
     for i, decay_product in enumerate(decay_products_neutralino):
-        ax_neutralino.bar(bar_positions_neutralino[i], neutralino_df[neutralino_df['decay_products'] == decay_product]['branching_ratio'].mean(), label=decay_product)
-
+        ax_neutralino.bar(bar_positions_neutralino[i], neutralino_df[neutralino_df['decay_products'] == decay_product]['branching_ratio'].mean(), label=str(decay_product))
+  
     ax_neutralino.set_xticks(bar_positions_neutralino)
     ax_neutralino.set_xticklabels(decay_products_neutralino, rotation=45, ha='right')
     ax_neutralino.set_ylabel('Branching Ratio')
@@ -251,8 +253,7 @@ def plot_branching_ratios_on_ax(ax_neutralino, ax_chargino, neutralino_df, charg
     bar_positions_chargino = np.arange(num_decay_products_chargino)
 
     for i, decay_product in enumerate(decay_products_chargino):
-        ax_chargino.bar(bar_positions_chargino[i], chargino_df[chargino_df['decay_products'] == decay_product]['branching_ratio'].mean(), label=decay_product)
-
+        ax_chargino.bar(bar_positions_chargino[i], chargino_df[chargino_df['decay_products'] == decay_product]['branching_ratio'].mean(), label=str(decay_product))
     ax_chargino.set_xticks(bar_positions_chargino)
     ax_chargino.set_xticklabels(decay_products_chargino, rotation=45, ha='right')
     ax_chargino.set_ylabel('Branching Ratio')
@@ -286,18 +287,56 @@ def plot_mixing_matrix_on_ax(ax, mixing_matrix, title):
     ax.set_xlabel("Column")
     ax.set_ylabel("Row")
     ax.set_title(title)
-    
-def update_graph(m1_value, m2_value, mu_value, tan_beta_value):
-    nmix, umix, neutralino_df, chargino_df = load_data_from_files(m1_value, m2_value, mu_value, tan_beta_value)
 
+def plot_branching_ratios_on_ax2(ax_neutralino, ax_chargino, neutralino_df, chargino_df, title_neutralino, title_chargino):
+    # Neutralinos
+    decay_products_neutralino = neutralino_df['decay_products'].unique()
+    num_decay_products_neutralino = len(decay_products_neutralino)
+    bar_positions_neutralino = np.arange(num_decay_products_neutralino)
+    bar_values_neutralino = []
+
+    for decay_product in decay_products_neutralino:
+        bar_values_neutralino.append(neutralino_df[neutralino_df['decay_products'] == decay_product]['branching_ratio'].mean())
+
+    ax_neutralino.bar(bar_positions_neutralino, bar_values_neutralino)
+    ax_neutralino.set_xticks(bar_positions_neutralino)
+    ax_neutralino.set_xticklabels(decay_products_neutralino, rotation=45, ha='right')
+    ax_neutralino.set_ylabel('Branching Ratio')
+    ax_neutralino.set_title(title_neutralino)
+    ax_neutralino.legend(decay_products_neutralino)
+
+    # Charginos
+    decay_products_chargino = chargino_df['decay_products'].unique()
+    num_decay_products_chargino = len(decay_products_chargino)
+    bar_positions_chargino = np.arange(num_decay_products_chargino)
+    bar_values_chargino = []
+
+    for decay_product in decay_products_chargino:
+        bar_values_chargino.append(chargino_df[chargino_df['decay_products'] == decay_product]['branching_ratio'].mean())
+
+    ax_chargino.bar(bar_positions_chargino, bar_values_chargino)
+    ax_chargino.set_xticks(bar_positions_chargino)
+    ax_chargino.set_xticklabels(decay_products_chargino, rotation=45, ha='right')
+    ax_chargino.set_ylabel('Branching Ratio')
+    ax_chargino.set_title(title_chargino)
+    ax_chargino.legend(decay_products_chargino)
+
+def update_graph(m1_value, m2_value, mu_value, tan_beta_value):
+
+
+    (nmix, umix, neutralino_df, chargino_df) = load_data_from_files(m1_value, m2_value, mu_value, tan_beta_value)
+    if nmix is None or umix is None or neutralino_df is None or chargino_df is None:
+        print("Error: Data not found for the given parameters.")
+        return
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 12))
+    #fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 12))
 
     plot_mixing_matrix_on_ax(ax1, nmix, "Neutralino Mixing Matrix")
     plot_mixing_matrix_on_ax(ax2, umix, "Chargino Mixing Matrix")
-    plot_branching_ratios_on_ax(ax3, ax4, neutralino_df, chargino_df, "Neutralino Decay Branching Ratios", "Chargino Decay Branching Ratios")
 
+    plot_branching_ratios_on_ax(ax3, ax4, neutralino_df, chargino_df, "Neutralino Decay Branching Ratios", "Chargino Decay Branching Ratios")
     plt.tight_layout()
-    plt.show()
+    print(m1_value, m2_value, mu_value, tan_beta_value)
 
 def zplot_branching_ratios_on_ax(neutralino_df, chargino_df, nmix, umix, ax=None):
     
@@ -342,10 +381,13 @@ def load_data_from_files(m1_value, m2_value, mu_value, tan_beta_value):
      
      filename = get_filename(m1_value, m2_value, mu_value, tan_beta_value)
 
+     if filename is None:
+          return None, None, None, None
+     
      if filename != None:
           data = pyslha.read(filename)
      else:
-          return
+          return m1_value, m2_value, mu_value, tan_beta_value
 
      neutralino_df = slha_to_dataframe_mod(filename, particle_type = 'neutralino')
      chargino_df = slha_to_dataframe_mod(filename, particle_type = 'chargino')
@@ -388,24 +430,31 @@ def get_filename(m1_value, m2_value, mu_value, tan_beta_value, folder = 'output_
                     if (m1 == m1_value and m2 == m2_value and mu == mu_value and tan_beta == tan_beta_value):
                          return filepath
                     
-     return None
+     return "output_dir\output_M_1_100_M_2_100_mu_100_.slha"
           
-m1_slider = widgets.FloatSlider(min = 100, max=1500, step = 100, value = 100, description = 'M_1(MX)')
-m2_slider = widgets.FloatSlider(min = 100, max=1500, step = 100, value = 200, description = 'M_2(MX)')
+m1_slider = widgets.FloatSlider(min = 100, max=1500, step = 100, value = 1000, description = 'M_1(MX)')
+m2_slider = widgets.FloatSlider(min = 100, max=1500, step = 100, value = 500, description = 'M_2(MX)')
 mu_slider = widgets.FloatSlider(min = 100, max=1500, step = 100, value = 800, description = 'mu(MX)')
 tan_beta_slider = widgets.FloatSlider(min = 0, max=50, step = 0.1, value = 10, description = 'tan(beta)')
 
-interactive_plot = widgets.interactive(
-     update_graph,
-     m1_value = m1_slider,
-     m2_value = m2_slider,
-     mu_value = mu_slider,
-     tan_beta_value = tan_beta_slider
-)
+# fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 12))
 
-display(widgets.HBox([m1_slider, m2_slider, mu_slider, tan_beta_slider]))
+# interactive_plot = widgets.interactive(
+#      update_graph,
+#      ax1=widgets.fixed(ax1),
+#     ax2=widgets.fixed(ax2),
+#     ax3=widgets.fixed(ax3),
+#     ax4=widgets.fixed(ax4),
+#      m1_value = m1_slider,
+#      m2_value = m2_slider,
+#      mu_value = mu_slider,
+#      tan_beta_value = tan_beta_slider
+# )
 
-display(interactive_plot.children[-1])
+# display(widgets.HBox([m1_slider, m2_slider, mu_slider, tan_beta_slider]))
 
-plt.show()
+# display(interactive_plot.children[-1])
+
+# plt.show()
+
 

@@ -1,4 +1,5 @@
 import os
+import pyslha
 
 def are_input():
     input_dir = "input_dir"
@@ -32,13 +33,26 @@ def change_name():
 
 def file_infos(file,options):
 
-    split = file.split(':')
+    data = pyslha.read(file)
 
-    elements = {}
-    for i in range(len(split)):
-        if split[i]+'(MX)' in options:
-            elements[split[i]+'(MX)'] = float(split[i+1])
-    return elements
+    m1 = data.blocks['EXTPAR'][1]
+    m2 = data.blocks['EXTPAR'][2]
+    mu = data.blocks['EXTPAR'][23]
+
+    result = {
+          'M_1(MX)': m1,
+          'M_2(MX)': m2,
+          'mu(MX)' : mu
+    }
+
+    return result
+    # split = file.split(':')
+
+    # elements = {}
+    # for i in range(len(split)):
+    #     if split[i]+'(MX)' in options:
+    #         elements[split[i]+'(MX)'] = float(split[i+1])
+    # return elements
 
 # file = "output:M_1(MX):100:M_2(MX):100:mu(MX):800:.slha"
 

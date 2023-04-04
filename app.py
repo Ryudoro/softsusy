@@ -234,7 +234,7 @@ class SoftsusyApp:
         
     def debug(self):
         self.parameters['M_2(MX)'] = (100,1500,100)
-        self.param_mass['M_1(MX)'] = 400
+        self.parameters['M_1(MX)'] = (100,1500,100)
         self.param_mass['mu(MX)'] = 800
 
 def main():

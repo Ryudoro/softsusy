@@ -314,14 +314,14 @@ def plots(x_m1,x_m2,y_m2_1,y_m2_2, fig, ax, param_ranges, param_mass):
     
     scatter = ax.scatter(x_m1, x_m2, c = y_m2_1, cmap = 'viridis')
 
-    cbar = fig.colorbar(scatter, ax=ax, label = 'y_m2_1')
+    cbar = fig.colorbar(scatter, ax=ax, label = 'Neutralino 1')
     x_m1_grid, x_m2_grid = np.meshgrid(np.linspace(min(x_m1), max(x_m1), 100), np.linspace(min(x_m2), max(x_m2), 100))
     points = np.vstack((x_m1, x_m2)).T
     y_m2_1_grid = griddata(points, y_m2_1, (x_m1_grid, x_m2_grid), method = 'cubic')
     ax.contour(x_m1_grid, x_m2_grid, y_m2_1_grid, cmap = 'viridis', alpha = 0.5)
 
-    ax.set_xlabel('x_m1')
-    ax.set_ylabel('x_m2')
+    ax.set_xlabel('M_1(MX)')
+    ax.set_ylabel('M_2(MX)')
 
 # def perform_calculations_mass(combi):
 
