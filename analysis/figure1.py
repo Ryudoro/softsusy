@@ -17,6 +17,7 @@ def extract_slha(folder_path):
     liste_C2 = []
 
     for slha in liste_path:
+ 
         data = pyslha.read(f'{folder_path}/' +slha)
 
         liste_m1.append(data.blocks['EXTPAR'][1])
@@ -81,10 +82,15 @@ def slha_folder(slha_folder):
 
 def plot(df, M1, mu, tanb, title = '', linestyle = '-'):
     fig = plt.figure(figsize=(14, 8))
+
     for column in df.columns:
-        plt.plot(df.index, df[column], label=column, linestyle=linestyle)
+        #plt.plot(df.index, df[column], label=column, linestyle=linestyle)
+        if len(column) == 2:
+            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}$", linestyle=linestyle)
+        if len(column) == 3:
+            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}, {column[2]}$", linestyle=linestyle)
     plt.text(10,0.9,f'$M_1 = {M1}$ GeV' + '\n'+r'$\tan\beta=$' +f'{tanb}', fontsize=10, bbox=dict(facecolor='skyblue', alpha=0.5, edgecolor='black', boxstyle='round,pad=0.5'))
-    plt.title(f'Désintégrations du neutralino 2 en fonction de $M_2(MX)$ pour $\mu(MX) = {mu}$ GeV')
+    plt.title(title)
     plt.xlabel('$M_2(MX)$ [GeV]', fontsize= 14)
     plt.ylabel('Branching ratio', fontsize= 14)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -94,3 +100,6 @@ def plot(df, M1, mu, tanb, title = '', linestyle = '-'):
     plt.xlim(0,1200)
     plt.ylim(0,1)
     plt.show()
+
+
+#extract_slha("M2from0to1200M15000mu1000and5000")
