@@ -17,7 +17,6 @@ def extract_slha(folder_path):
     liste_C2 = []
 
     for slha in liste_path:
- 
         data = pyslha.read(f'{folder_path}/' +slha)
 
         liste_m1.append(data.blocks['EXTPAR'][1])
@@ -30,9 +29,9 @@ def extract_slha(folder_path):
         liste_C2.append(data.blocks['MASS'][1000037])
 
     result = {
-        'M_1(MX)' : liste_m1,
-        'M_2(MX)' : liste_m2,
-        'mu(MX)' : liste_mu,
+        'M_1' : liste_m1,
+        'M_2' : liste_m2,
+        'mu' : liste_mu,
         'Neut1' : liste_N1,
         'Neut2' : liste_N2,
         'Neut3' : liste_N3,
@@ -53,15 +52,15 @@ def slha_to_dataframe_desin(slha_file):
         if particle_id in (-1000024, 1000024, -1000037, 1000037, 1000022, 1000023, 1000025, 1000035):
             for decay in particle_info.decays:
                 decay_data.append({
-                    'M_1(MX)' : m1,
-                    'M_2(MX)' : m2,
-                    'mu(MX)' : mu,
+                    'M_1' : m1,
+                    'M_2' : m2,
+                    'mu' : mu,
 				    'particle_id': particle_id,
 				    'branching_ratio' : decay.br,
 				    'decay_products': tuple(sorted(decay.ids))
                 })
 			    
-    df = pd.DataFrame(decay_data, columns = ['M_1(MX)', 'M_2(MX)', 'mu(MX)', 'particle_id', 'branching_ratio', 'decay_products'])
+    df = pd.DataFrame(decay_data, columns = ['M_1', 'M_2', 'mu', 'particle_id', 'branching_ratio', 'decay_products'])
 
     return df
 
@@ -80,18 +79,24 @@ def slha_folder(slha_folder):
 
 # print(it.head())
 
-def plot(df, M1, mu, tanb, title = '', linestyle = '-'):
-    fig = plt.figure(figsize=(14, 8))
+from particle_name import particles_names
+particles_name = particles_names()
 
+def latex_decay_products_to_names(decay_tuple_str):
+    return tuple(particles_name.get(int(pid.strip()), pid.strip()) for pid in decay_tuple_str.strip('()').split(','))
+
+def plot(df2, M1, mu, tanb, title = '', linestyle = '-'):
+    df = df2.copy(deep = True)
+    df.columns = [latex_decay_products_to_names(str(col)) for col in df.columns]
+    fig = plt.figure(figsize=(14, 8))
     for column in df.columns:
-        #plt.plot(df.index, df[column], label=column, linestyle=linestyle)
         if len(column) == 2:
-            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}$", linestyle=linestyle)
+            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}$")
         if len(column) == 3:
-            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}, {column[2]}$", linestyle=linestyle)
-    plt.text(10,0.9,f'$M_1 = {M1}$ GeV' + '\n'+r'$\tan\beta=$' +f'{tanb}', fontsize=10, bbox=dict(facecolor='skyblue', alpha=0.5, edgecolor='black', boxstyle='round,pad=0.5'))
-    plt.title(title)
-    plt.xlabel('$M_2(MX)$ [GeV]', fontsize= 14)
+            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}, {column[2]}$")
+    plt.text(10,0.9,f'$M_1 = {M1}$ GeV' + '\n'+r'$\tan\beta=$' +f'{tanb}' +f'\n \\mu = {mu} GeV', fontsize=10, bbox=dict(facecolor='skyblue', alpha=0.5, edgecolor='black', boxstyle='round,pad=0.5'))
+    plt.title(title, fontsize = 14)
+    plt.xlabel('$M_2$ [GeV]', fontsize= 14)
     plt.ylabel('Branching ratio', fontsize= 14)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.grid(True)
@@ -100,6 +105,5 @@ def plot(df, M1, mu, tanb, title = '', linestyle = '-'):
     plt.xlim(0,1200)
     plt.ylim(0,1)
     plt.show()
-
 
 #extract_slha("M2from0to1200M15000mu1000and5000")
