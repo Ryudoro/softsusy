@@ -2,7 +2,7 @@ import os
 import pyslha
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import numpy as np
 def extract_slha(folder_path):
 
     liste_path = os.listdir(folder_path)
@@ -87,14 +87,64 @@ def latex_decay_products_to_names(decay_tuple_str):
 
 def plot(df2, M1, mu, tanb, title = '', linestyle = '-'):
     df = df2.copy(deep = True)
-    df.columns = [latex_decay_products_to_names(str(col)) for col in df.columns]
+
+    sorted_columns = sorted(df.columns, key=lambda col: min([particle_weight(str(pid)) for pid in col]))
+    sorted_latex_columns = [latex_decay_products_to_names(str(col)) for col in sorted_columns]
+    df.columns = [latex_decay_products_to_names(str(col)) for col in sorted_columns]
+    print(sorted_columns)
+
+    moitie = len(sorted_columns) // 2
+    colormap_viridis = plt.cm.Set1
+    colormap_jet = plt.cm.viridis
+
+    couleurs_viridis = [colormap_viridis(i) for i in np.linspace(0, 1, moitie)]
+    couleurs_jet = [colormap_jet(i) for i in np.linspace(0, 1, len(sorted_columns) - moitie)]
+
+
+    couleurs = couleurs_viridis + couleurs_jet
+    couleurs_vives = [
+    "#FF0000",  # Rouge
+    "#00FF00",  # Vert
+    "#0000FF",  # Bleu
+    "#FFFF00",  # Jaune
+    "#FF00FF",  # Magenta
+    "#00FFFF",  # Cyan
+    "#FF4500",  # Orange
+    "#8A2BE2",  # Bleu-violet
+    "#7FFF00",  # Vert chartreuse
+    "#D2691E",  # Chocolat
+    "#DC143C",  # Cramoisi
+    "#00FA9A",  # Vert moyen printemps
+    "#FF69B4",  # Rose vif
+    "#8B008B",  # Magenta foncé
+    "#1E90FF",  # Bleu Dodger
+    "#FFD700",  # Or
+    "#4B0082",  # Indigo
+    "#FF4500",  # Orange-rouge
+    "#2E8B57",  # Vert de mer
+    "#ADFF2F",  # Vert jaune
+    "#32CD32",  # Vert lime
+    "#FA8072",  # Saumon
+    "#6A5ACD",  # Bleu ardoise
+    "#FFA500",  # Orange
+    "#FF6347",  # Tomate
+    "#3CB371",  # Vert menthe moyen
+    "#F08080",  # Rose clair
+    "#20B2AA",  # Vert clair de mer
+    "#8B4513",  # Brun de selle
+    "#B22222"   # Rouge brique
+]
+    couleurs =couleurs_vives
     fig = plt.figure(figsize=(14, 8))
-    for column in df.columns:
+    for i, column in enumerate(sorted_latex_columns):
+        #print(np.array(df[column]).max(), f"${column[0]} {column[1]}$")
+        if np.array(df[column]).max() < 0.05:
+            continue
         if len(column) == 2:
-            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}$")
+            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}$", color = couleurs[i])
         if len(column) == 3:
-            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}, {column[2]}$")
-    plt.text(10,0.9,f'$M_1 = {M1}$ GeV' + '\n'+r'$\tan\beta=$' +f'{tanb}' +f'\n \\mu = {mu} GeV', fontsize=10, bbox=dict(facecolor='skyblue', alpha=0.5, edgecolor='black', boxstyle='round,pad=0.5'))
+            plt.plot(df.index, df[column], label=f"${column[0]}, {column[1]}, {column[2]}$", color = couleurs[i])
+    plt.text(10,0.9,f'$M_1 = {M1}$ GeV' + '\n'+r'$\tan\beta=$' +f'{tanb}' +f'\n $\\mu =$ {mu} GeV', fontsize=10, bbox=dict(facecolor='skyblue', alpha=0.5, edgecolor='black', boxstyle='round,pad=0.5'))
     plt.title(title, fontsize = 14)
     plt.xlabel('$M_2$ [GeV]', fontsize= 14)
     plt.ylabel('Branching ratio', fontsize= 14)
@@ -103,7 +153,22 @@ def plot(df2, M1, mu, tanb, title = '', linestyle = '-'):
     plt.tight_layout()
     plt.tick_params(which='major', length=5, direction='in', bottom = True, top = True, left = True, right=True)
     plt.xlim(0,1200)
-    plt.ylim(0,1)
+    plt.ylim(0,1.005)
     plt.show()
 
 #extract_slha("M2from0to1200M15000mu1000and5000")
+
+
+def particle_weight(decay_products):
+    # Liste des particules dans l'ordre spécifié par l'utilisateur
+    order = [1000022, 1000024, -1000024, 1000023]
+    
+    # Parcourir l'ordre pour trouver la particule correspondante
+    for idx, particle in enumerate(order):
+        if str(particle) in decay_products:
+            return idx
+    
+    # Si aucune des particules n'est trouvée, retourner une valeur plus grande pour mettre à la fin
+    return len(order)
+
+
